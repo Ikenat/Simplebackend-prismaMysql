@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User{
+  id Int @id @default(autoincrement())
+  name String @unique
+  email String @unique
+  hashed_password String
+  salt String
+  avatar Bytes? @db.Blob 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  comments Comments[]
+  role Role @default(USER)
+}
+
+model Comments{
+  id Int @id @default(autoincrement())
+  parent_id Int
+  content String
+  image Bytes? @db.Blob
+  upvote Int @default(0)
+  downvote Int @default(0)
+  user User @relation(fields: [user_id], references: [id])
+  user_id Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  MOD
+  ADMIN
+}
+
+model Mangas{
+  id Int @id @default(autoincrement())
+  title String
+  slug String
+  alt String?
+  description String
+  author String
+  artist String
+  note Decimal
+  status_id Int
+  status Status @relation(fields: [status_id],references: [id])
+  type_id Int
+  type Type @relation(fields: [type_id],references: [id])
+  tags Mangas_tags[]
+  chapters Chapters[]
+}
+
+model Chapters{
+  id Int @id @default(autoincrement())
+  title String
+  slug String
+  image Image[]
+  chapter_number Int
+  published Boolean
+  mangas_id Int
+  mangas Mangas @relation(fields: [mangas_id],references: [id])
+}
+
+model Image{
+  id Int @id @default(autoincrement())
+  chapter_id Int
+  chapter Chapters @relation(fields: [chapter_id],references: [id])
+  image Bytes @db.Blob
+}
+
+model Status{
+  id Int @id @default(autoincrement())
+  name String
+  mangas Mangas[]
+}
+
+model Type{
+  id Int @id @default(autoincrement())
+  name String
+  mangas Mangas[]
+}
+
+model Mangas_tags{
+  id Int @id @default(autoincrement())
+  mangas_id Int
+  mangas Mangas @relation(fields: [mangas_id],references: [id])
+  tag_id Int
+  tag Tags @relation(fields: [tag_id],references: [id])
+}
+
+model Tags{
+  id Int @id @default(autoincrement())
+  name String
+  tags Mangas_tags[]
+}
